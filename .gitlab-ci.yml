@@ -1,0 +1,36 @@
+# specific Gitlab CI pipeline
+
+stages:          
+  - build
+  - deploy
+
+build-job:       
+  stage: build
+  only:
+    - main 
+  variables:
+    DOCKER_HOST: tcp://docker:2375 
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ""
+  services:
+    - name: docker:20-dind
+      alias: docker
+      command: ["--tls=false"]
+
+  before_script:
+    - mkdir -p $HOME/.docker
+    - cp $DOCKER_AUTH_CONFIG $HOME/.docker/config.json
+  script:
+    - docker build -t h-registry/bots/remote_control:$MAJOR.$MINOR.$VERSION.$CI_PIPELINE_ID-master .
+    - docker push h-registry/bots/remote_control:$MAJOR.$MINOR.$VERSION.$CI_PIPELINE_ID-master
+
+deploy-job:     
+  stage: deploy  
+  only:
+    - main 
+  before_script:
+    - mkdir -p $HOME/.docker
+    - cp $DOCKER_AUTH_CONFIG $HOME/.docker/config.json
+    - export DOCKER_HOST=tcp://192.168.4.234
+  script:
+    - docker-compose -f remote_bot.yml -p remote_bot up -d

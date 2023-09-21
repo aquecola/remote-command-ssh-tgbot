@@ -1,0 +1,26 @@
+version: '3'
+services:
+  bot:
+    # use another image link if need it
+    image: h-registry1/bots/ios_remote_control:${MAJOR}.${MINOR}.${VERSION}.${CI_PIPELINE_ID}-master
+    environment:
+      - API_TOKEN="66844324236220:AAFhZvfdFDSDSAdONhy54423423"
+      - SSH_HOST=192.168.1.1
+      - SSH_PORT=22
+      - SSH_USERNAME=admin
+      - ALLOWED_CHAT_ID=123456789
+    container_name: remote_tgbot
+
+# You can delete this below
+
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://192.168.4.39:12201"
+        tag: "dev"
+    healthcheck:
+      test: curl -sS http://127.0.0.1:6000 || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
